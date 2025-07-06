@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotify - Easy Install</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        .subtitle {
+            font-size: 20px;
+            opacity: 0.9;
+            margin-bottom: 40px;
+        }
+        .install-box {
+            background: rgba(255,255,255,0.2);
+            border-radius: 16px;
+            padding: 30px;
+            margin: 30px 0;
+            border: 1px solid rgba(255,255,255,0.3);
+        }
+        .step {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: left;
+        }
+        .step-number {
+            background: #007aff;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+        }
+        .code {
+            background: rgba(0,0,0,0.4);
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            margin: 10px 0;
+            border: 1px solid rgba(255,255,255,0.2);
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 5px 10px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .download-btn {
+            background: linear-gradient(45deg, #007aff, #0051d0);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 20px 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,122,255,0.3);
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+        }
+        .feature {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+        .feature-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .warning {
+            background: rgba(255,193,7,0.2);
+            border: 1px solid rgba(255,193,7,0.5);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎯</div>
+        <h1>Quotify</h1>
+        <div class="subtitle">Extrae citas perfectas de videos de YouTube</div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🎬</div>
+                <h3>YouTube Integration</h3>
+                <p>Metadata automática de cualquier video público</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">🎤</div>
+                <h3>AI Transcription</h3>
+                <p>Convierte audio a texto con timestamps precisos</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📝</div>
+                <h3>Smart Quotes</h3>
+                <p>Organiza y cita quotes perfectamente</p>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">⚡</div>
+                <h3>Real-time</h3>
+                <p>Cambios automáticos sin recargar</p>
+            </div>
+        </div>
+        
+        <div class="install-box">
+            <h2>🚀 Instalación Súper Fácil</h2>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                <strong>Descargar Quotify</strong>
+                <br>
+                <a href="quotify-dev-distribution.zip" class="download-btn" download>
+                    📥 Descargar Quotify
+                </a>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                <strong>Instalar Node.js</strong> (si no lo tienes)
+                <br>
+                <a href="https://nodejs.org/" target="_blank" class="download-btn">
+                    🔗 Ir a nodejs.org
+                </a>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                <strong>Ejecutar instalador</strong>
+                <div class="code">
+                    <button class="copy-btn" onclick="copyToClipboard('install-cmd')">Copiar</button>
+                    <span id="install-cmd">cd quotify-dev-distribution && ./install-dev.sh</span>
+                </div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                <strong>¡Listo!</strong> Doble-click en "Quotify Dev.command" en tu Desktop
+            </div>
+        </div>
+        
+        <div class="warning">
+            <strong>🔄 Auto-Actualización:</strong> 
+            Cuando publique una nueva versión, solo reemplaza los archivos y ejecuta el instalador nuevamente. 
+            Tus datos y configuración se mantienen.
+        </div>
+        
+        <div style="margin-top: 40px; opacity: 0.8; font-size: 14px;">
+            <p>💻 Funciona en Mac, Windows y Linux</p>
+            <p>🌐 Se abre en tu navegador favorito</p>
+            <p>🔒 Todos los datos se guardan localmente</p>
+        </div>
+    </div>
+
+    <script>
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                // Feedback visual
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copiado';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+        
+        // Verificar si hay una nueva versión disponible
+        function checkForUpdates() {
+            // Aquí podrías hacer una llamada a tu API para verificar versiones
+            console.log('Verificando actualizaciones...');
+        }
+        
+        // Auto-verificar actualizaciones cada 5 minutos
+        setInterval(checkForUpdates, 5 * 60 * 1000);
+    </script>
+</body>
+</html>

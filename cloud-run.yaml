@@ -1,0 +1,56 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: quotify-web
+  annotations:
+    # Allow all traffic (configure as needed for production)
+    run.googleapis.com/ingress: all
+    # Scale to zero when not in use
+    autoscaling.knative.dev/minScale: "0"
+    autoscaling.knative.dev/maxScale: "10"
+    # CPU throttling only during requests
+    run.googleapis.com/cpu-throttling: "true"
+spec:
+  template:
+    metadata:
+      annotations:
+        # Resource limits for Cloud Run
+        run.googleapis.com/memory: "2Gi"
+        run.googleapis.com/cpu: "1"
+        # Concurrency (requests per instance)
+        autoscaling.knative.dev/maxScale: "100"
+        # Timeout for requests (max 60 minutes for Cloud Run)
+        run.googleapis.com/timeout: "3600s"
+    spec:
+      containers:
+      - image: gcr.io/PROJECT_ID/quotify-web
+        ports:
+        - containerPort: 5174
+        env:
+        # Environment variables (set these in Cloud Run console or via gcloud)
+        - name: NODE_ENV
+          value: "production"
+        - name: PORT
+          value: "5174"
+        # Optional: YouTube API key for metadata scraping
+        - name: YOUTUBE_API_KEY
+          value: ""
+        resources:
+          limits:
+            memory: "2Gi"
+            cpu: "1"
+        # Health check
+        livenessProbe:
+          httpGet:
+            path: /api/load-api-key
+            port: 5174
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /api/load-api-key
+            port: 5174
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 5

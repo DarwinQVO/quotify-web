@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotify Launcher</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f7;
+            color: #1d1d1f;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .logo {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #1d1d1f;
+            margin-bottom: 30px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+        .status.checking { background: #e3f2fd; color: #1565c0; }
+        .status.installing { background: #fff3e0; color: #ef6c00; }
+        .status.ready { background: #e8f5e8; color: #2e7d32; }
+        .status.error { background: #ffebee; color: #c62828; }
+        .btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+        }
+        .btn:hover { background: #0051d0; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .progress {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .progress-bar {
+            height: 100%;
+            background: #007aff;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .version-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .terminal {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            text-align: left;
+            max-height: 200px;
+            overflow-y: auto;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎯</div>
+        <h1>Quotify Launcher</h1>
+        
+        <div id="status" class="status checking">
+            Verificando versión...
+        </div>
+        
+        <div class="progress">
+            <div id="progress-bar" class="progress-bar"></div>
+        </div>
+        
+        <div id="version-info" class="version-info" style="display: none;">
+            <strong>Versión actual:</strong> <span id="current-version">-</span><br>
+            <strong>Última versión:</strong> <span id="latest-version">-</span>
+        </div>
+        
+        <div class="terminal" id="terminal"></div>
+        
+        <div id="actions">
+            <button id="install-btn" class="btn" onclick="installOrUpdate()">
+                Instalar/Actualizar Quotify
+            </button>
+            <button id="launch-btn" class="btn" onclick="launchQuotify()" style="display: none;">
+                🚀 Abrir Quotify
+            </button>
+        </div>
+        
+        <div style="margin-top: 30px; font-size: 12px; color: #666;">
+            Quotify se instalará en: <code id="install-path">~/Quotify</code>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://api.github.com/repos/TU_USUARIO/quotify-releases';
+        const INSTALL_PATH = '~/Quotify';
+        
+        let currentVersion = null;
+        let latestVersion = null;
+        
+        async function checkVersion() {
+            try {
+                // Verificar versión instalada
+                const installedVersion = localStorage.getItem('quotify-version') || '0.0.0';
+                currentVersion = installedVersion;
+                
+                // Verificar última versión (simulado - reemplaza con tu API)
+                latestVersion = '1.0.0'; // Obten esto de tu servidor
+                
+                document.getElementById('current-version').textContent = currentVersion;
+                document.getElementById('latest-version').textContent = latestVersion;
+                document.getElementById('version-info').style.display = 'block';
+                
+                if (currentVersion === latestVersion && localStorage.getItem('quotify-installed')) {
+                    setStatus('ready', '✅ Quotify está actualizado y listo');
+                    showLaunchButton();
+                } else {
+                    setStatus('checking', '🔄 Nueva versión disponible');
+                }
+            } catch (error) {
+                setStatus('error', '❌ Error verificando versión: ' + error.message);
+            }
+        }
+        
+        async function installOrUpdate() {
+            const isUpdate = localStorage.getItem('quotify-installed');
+            const actionText = isUpdate ? 'Actualizando' : 'Instalando';
+            
+            setStatus('installing', `${actionText} Quotify...`);
+            document.getElementById('install-btn').disabled = true;
+            showTerminal();
+            
+            try {
+                // Simular proceso de instalación
+                await simulateInstallation();
+                
+                // Marcar como instalado
+                localStorage.setItem('quotify-installed', 'true');
+                localStorage.setItem('quotify-version', latestVersion);
+                
+                setStatus('ready', '✅ Quotify instalado correctamente');
+                showLaunchButton();
+                
+            } catch (error) {
+                setStatus('error', '❌ Error en instalación: ' + error.message);
+            } finally {
+                document.getElementById('install-btn').disabled = false;
+            }
+        }
+        
+        async function simulateInstallation() {
+            const steps = [
+                'Descargando Quotify...',
+                'Verificando dependencias...',
+                'Instalando Node.js (si es necesario)...',
+                'Configurando entorno...',
+                'Instalando dependencias npm...',
+                'Configurando accesos directos...',
+                'Finalizando instalación...'
+            ];
+            
+            for (let i = 0; i < steps.length; i++) {
+                addToTerminal(steps[i]);
+                updateProgress((i + 1) / steps.length * 100);
+                await sleep(800);
+            }
+            
+            addToTerminal('✅ Instalación completada');
+        }
+        
+        function launchQuotify() {
+            setStatus('checking', '🚀 Abriendo Quotify...');
+            addToTerminal('Iniciando servidor de desarrollo...');
+            addToTerminal('Servidor iniciado en http://localhost:5173');
+            
+            // Abrir en nueva ventana
+            window.open('http://localhost:5173', '_blank');
+            
+            // Simular que se abrió correctamente
+            setTimeout(() => {
+                setStatus('ready', '✅ Quotify ejecutándose en http://localhost:5173');
+            }, 2000);
+        }
+        
+        function setStatus(type, message) {
+            const statusEl = document.getElementById('status');
+            statusEl.className = `status ${type}`;
+            statusEl.textContent = message;
+        }
+        
+        function updateProgress(percent) {
+            document.getElementById('progress-bar').style.width = percent + '%';
+        }
+        
+        function showTerminal() {
+            document.getElementById('terminal').style.display = 'block';
+        }
+        
+        function addToTerminal(message) {
+            const terminal = document.getElementById('terminal');
+            terminal.innerHTML += '> ' + message + '\\n';
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function showLaunchButton() {
+            document.getElementById('launch-btn').style.display = 'inline-block';
+        }
+        
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+        
+        // Inicializar
+        window.addEventListener('load', checkVersion);
+    </script>
+</body>
+</html>

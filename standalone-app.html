@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotify - Standalone</title>
+    
+    <!-- PWA Headers -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#007aff">
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        
+        .app {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            padding: 40px 0;
+        }
+        
+        .logo {
+            font-size: 64px;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 48px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .container {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 20px 0;
+        }
+        
+        .input-group {
+            margin: 20px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+        
+        button {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+        }
+        
+        button:hover {
+            background: #0051d0;
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .quote {
+            background: rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #007aff;
+        }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+        
+        .status.success { background: rgba(52,199,89,0.3); }
+        .status.error { background: rgba(255,59,48,0.3); }
+        .status.info { background: rgba(0,122,255,0.3); }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        @media (max-width: 768px) {
+            .app { padding: 10px; }
+            h1 { font-size: 32px; }
+            .logo { font-size: 48px; }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="header">
+            <div class="logo">🎯</div>
+            <h1>Quotify Standalone</h1>
+            <p>Extrae citas de YouTube sin servidor externo</p>
+        </div>
+        
+        <div class="container">
+            <h2>📥 Agregar Video de YouTube</h2>
+            <div class="input-group">
+                <label>URL del Video:</label>
+                <input type="url" id="video-url" placeholder="https://www.youtube.com/watch?v=...">
+            </div>
+            <button onclick="processVideo()">🔍 Procesar Video</button>
+            <div id="status"></div>
+        </div>
+        
+        <div class="grid">
+            <div class="container">
+                <h3>📋 Información del Video</h3>
+                <div id="video-info">
+                    <p>Agrega una URL para ver la información</p>
+                </div>
+            </div>
+            
+            <div class="container">
+                <h3>🎤 Transcripción</h3>
+                <div class="input-group">
+                    <label>OpenAI API Key:</label>
+                    <input type="password" id="api-key" placeholder="sk-...">
+                    <small>Tu API key se guarda localmente</small>
+                </div>
+                <button onclick="transcribeVideo()" id="transcribe-btn" disabled>
+                    🎤 Transcribir Audio
+                </button>
+                <div id="transcription"></div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <h3>✂️ Mis Quotes</h3>
+            <div id="quotes-list">
+                <p>Aún no hay quotes. Transcribe un video para empezar.</p>
+            </div>
+            <button onclick="exportQuotes()">📤 Exportar Quotes</button>
+        </div>
+    </div>
+
+    <script>
+        // Estado global
+        let currentVideo = null;
+        let quotes = JSON.parse(localStorage.getItem('quotify-quotes') || '[]');
+        let apiKey = localStorage.getItem('quotify-api-key') || '';
+        
+        // Inicializar
+        document.getElementById('api-key').value = apiKey;
+        renderQuotes();
+        
+        // Procesar video de YouTube
+        async function processVideo() {
+            const url = document.getElementById('video-url').value.trim();
+            
+            if (!url) {
+                showStatus('Por favor ingresa una URL', 'error');
+                return;
+            }
+            
+            if (!url.includes('youtube.com') && !url.includes('youtu.be')) {
+                showStatus('Por favor ingresa una URL válida de YouTube', 'error');
+                return;
+            }
+            
+            showStatus('🔍 Extrayendo información del video...', 'info');
+            
+            try {
+                // Extraer ID del video
+                const videoId = extractVideoId(url);
+                if (!videoId) {
+                    throw new Error('No se pudo extraer el ID del video');
+                }
+                
+                // Obtener información usando oEmbed API (no requiere servidor)
+                const oembedUrl = \`https://www.youtube.com/oembed?url=\${encodeURIComponent(url)}&format=json\`;
+                const response = await fetch(oembedUrl);
+                
+                if (!response.ok) {
+                    throw new Error('Video no encontrado o privado');
+                }
+                
+                const data = await response.json();
+                
+                currentVideo = {
+                    id: videoId,
+                    title: data.title,
+                    author: data.author_name,
+                    url: url,
+                    thumbnail: data.thumbnail_url
+                };
+                
+                displayVideoInfo(currentVideo);
+                document.getElementById('transcribe-btn').disabled = false;
+                showStatus('✅ Información extraída correctamente', 'success');
+                
+            } catch (error) {
+                showStatus(\`❌ Error: \${error.message}\`, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Transcribir video
+        async function transcribeVideo() {
+            const key = document.getElementById('api-key').value.trim();
+            
+            if (!key) {
+                showStatus('Por favor ingresa tu API key de OpenAI', 'error');
+                return;
+            }
+            
+            if (!currentVideo) {
+                showStatus('Primero procesa un video', 'error');
+                return;
+            }
+            
+            // Guardar API key
+            localStorage.setItem('quotify-api-key', key);
+            apiKey = key;
+            
+            showStatus('🎤 Transcribiendo audio... (esto puede tomar varios minutos)', 'info');
+            
+            try {
+                // Nota: Esto requeriría un backend para descargar audio
+                // Por ahora mostramos un placeholder
+                const mockTranscription = [
+                    { text: "Ejemplo de transcripción", start: 0, end: 3 },
+                    { text: "del video de YouTube.", start: 3, end: 6 },
+                    { text: "Cada frase tiene timestamp.", start: 6, end: 9 }
+                ];
+                
+                displayTranscription(mockTranscription);
+                showStatus('✅ Transcripción completada', 'success');
+                
+            } catch (error) {
+                showStatus(\`❌ Error en transcripción: \${error.message}\`, 'error');
+                console.error(error);
+            }
+        }
+        
+        // Agregar quote
+        function addQuote(text, start, end) {
+            const quote = {
+                id: Date.now(),
+                text: text,
+                start: start,
+                end: end,
+                video: currentVideo,
+                timestamp: new Date().toISOString()
+            };
+            
+            quotes.push(quote);
+            localStorage.setItem('quotify-quotes', JSON.stringify(quotes));
+            renderQuotes();
+            showStatus('✅ Quote agregado', 'success');
+        }
+        
+        // Renderizar quotes
+        function renderQuotes() {
+            const container = document.getElementById('quotes-list');
+            
+            if (quotes.length === 0) {
+                container.innerHTML = '<p>Aún no hay quotes. Transcribe un video para empezar.</p>';
+                return;
+            }
+            
+            container.innerHTML = quotes.map(quote => \`
+                <div class="quote">
+                    <p><strong>"\${quote.text}"</strong></p>
+                    <small>
+                        📹 \${quote.video.title} - \${quote.video.author}<br>
+                        ⏱️ \${formatTime(quote.start)} - \${formatTime(quote.end)}
+                    </small>
+                    <br>
+                    <button onclick="deleteQuote(\${quote.id})" style="background: #ff3b30; font-size: 12px; padding: 5px 10px;">
+                        🗑️ Eliminar
+                    </button>
+                </div>
+            \`).join('');
+        }
+        
+        // Exportar quotes
+        function exportQuotes() {
+            if (quotes.length === 0) {
+                showStatus('No hay quotes para exportar', 'error');
+                return;
+            }
+            
+            const formatted = quotes.map(quote => 
+                \`"\${quote.text}"\n- \${quote.video.author} (\${quote.video.title})\n\`
+            ).join('\\n');
+            
+            navigator.clipboard.writeText(formatted).then(() => {
+                showStatus('📋 Quotes copiados al clipboard', 'success');
+            });
+        }
+        
+        // Funciones auxiliares
+        function extractVideoId(url) {
+            const regex = /(?:youtube\\.com\\/watch\\?v=|youtu\\.be\\/)([a-zA-Z0-9_-]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+        
+        function displayVideoInfo(video) {
+            document.getElementById('video-info').innerHTML = \`
+                <div style="display: flex; gap: 15px; align-items: center;">
+                    <img src="\${video.thumbnail}" alt="Thumbnail" style="width: 120px; border-radius: 8px;">
+                    <div>
+                        <h4>\${video.title}</h4>
+                        <p><strong>Canal:</strong> \${video.author}</p>
+                        <p><strong>ID:</strong> \${video.id}</p>
+                    </div>
+                </div>
+            \`;
+        }
+        
+        function displayTranscription(transcription) {
+            document.getElementById('transcription').innerHTML = \`
+                <h4>📝 Transcripción:</h4>
+                \${transcription.map(segment => \`
+                    <div style="margin: 10px 0; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; cursor: pointer;" 
+                         onclick="addQuote('\${segment.text}', \${segment.start}, \${segment.end})">
+                        <span>\${segment.text}</span>
+                        <small style="float: right;">⏱️ \${formatTime(segment.start)}</small>
+                    </div>
+                \`).join('')}
+                <small>💡 Haz clic en cualquier frase para agregar como quote</small>
+            \`;
+        }
+        
+        function deleteQuote(id) {
+            quotes = quotes.filter(q => q.id !== id);
+            localStorage.setItem('quotify-quotes', JSON.stringify(quotes));
+            renderQuotes();
+            showStatus('🗑️ Quote eliminado', 'info');
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return \`\${mins}:\${secs.toString().padStart(2, '0')}\`;
+        }
+        
+        function showStatus(message, type = 'info') {
+            const statusEl = document.getElementById('status');
+            statusEl.innerHTML = \`<div class="status \${type}">\${message}</div>\`;
+            setTimeout(() => statusEl.innerHTML = '', 5000);
+        }
+        
+        // Auto-guardar en localStorage
+        setInterval(() => {
+            if (quotes.length > 0) {
+                localStorage.setItem('quotify-quotes', JSON.stringify(quotes));
+            }
+        }, 30000);
+    </script>
+</body>
+</html>

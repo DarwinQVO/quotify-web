@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotify - Install as App</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="Quotify">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Quotify">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#007aff">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 50px;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            color: #333;
+        }
+        
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(45deg, #007aff, #5856d6);
+            border-radius: 28px;
+            margin: 0 auto 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 60px;
+            box-shadow: 0 10px 30px rgba(0,122,255,0.3);
+        }
+        
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #007aff, #5856d6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+        
+        .install-button {
+            background: linear-gradient(45deg, #007aff, #5856d6);
+            color: white;
+            border: none;
+            padding: 18px 40px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(0,122,255,0.3);
+            margin: 10px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .install-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(0,122,255,0.4);
+        }
+        
+        .install-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .secondary-button {
+            background: rgba(0,122,255,0.1);
+            color: #007aff;
+            border: 2px solid #007aff;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 25px;
+            margin: 50px 0;
+        }
+        
+        .feature {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 12px;
+        }
+        
+        .feature h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .feature p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.4;
+        }
+        
+        .status {
+            background: rgba(0,122,255,0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 30px 0;
+            font-weight: 500;
+            color: #007aff;
+        }
+        
+        .status.success {
+            background: rgba(52,199,89,0.1);
+            color: #34c759;
+        }
+        
+        .status.error {
+            background: rgba(255,59,48,0.1);
+            color: #ff3b30;
+        }
+        
+        .instructions {
+            background: rgba(0,0,0,0.03);
+            border-radius: 16px;
+            padding: 25px;
+            margin: 30px 0;
+            text-align: left;
+            line-height: 1.6;
+        }
+        
+        .step {
+            margin: 15px 0;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .step-number {
+            background: #007aff;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+            
+            .features {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">🎯</div>
+        <h1>Quotify</h1>
+        <div class="subtitle">
+            Instala Quotify como una app nativa.<br>
+            Funciona offline y se actualiza automáticamente.
+        </div>
+        
+        <div id="status" class="status" style="display: none;"></div>
+        
+        <!-- Botón de instalación PWA -->
+        <button id="install-btn" class="install-button" onclick="installPWA()" style="display: none;">
+            📱 Instalar como App
+        </button>
+        
+        <!-- Botón para abrir directamente -->
+        <a href="http://localhost:5173" class="install-button" id="open-btn">
+            🚀 Abrir Quotify
+        </a>
+        
+        <!-- Instrucciones manuales -->
+        <div class="instructions">
+            <h3 style="margin-bottom: 20px;">📱 Instalación Manual (si no aparece el botón)</h3>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div>
+                    <strong>Chrome/Edge:</strong> Click en el icono de instalación (⊕) en la barra de direcciones
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">2</div>
+                <div>
+                    <strong>Safari (iPhone/iPad):</strong> Compartir → "Añadir a pantalla de inicio"
+                </div>
+            </div>
+            
+            <div class="step">
+                <div class="step-number">3</div>
+                <div>
+                    <strong>Firefox:</strong> Menú → "Instalar" cuando esté disponible
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <h3>Como App Nativa</h3>
+                <p>Se instala en tu dispositivo como cualquier otra app</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🔄</div>
+                <h3>Auto-actualiza</h3>
+                <p>Siempre tendrás la última versión automáticamente</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">💾</div>
+                <h3>Funciona Offline</h3>
+                <p>Usa tus quotes guardados sin internet</p>
+            </div>
+            
+            <div class="feature">
+                <div class="feature-icon">🔒</div>
+                <h3>Datos Locales</h3>
+                <p>Toda tu información se guarda en tu dispositivo</p>
+            </div>
+        </div>
+        
+        <div style="margin-top: 40px; color: #999; font-size: 14px;">
+            Compatible con todos los navegadores modernos<br>
+            Chrome, Firefox, Safari, Edge
+        </div>
+    </div>
+
+    <script>
+        let deferredPrompt;
+        let isInstalled = false;
+        
+        // Detectar si ya está instalado
+        if (window.matchMedia('(display-mode: standalone)').matches || 
+            window.navigator.standalone === true) {
+            isInstalled = true;
+            showStatus('✅ Quotify ya está instalado como app', 'success');
+            document.getElementById('install-btn').style.display = 'none';
+        }
+        
+        // Detectar evento de instalación
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            if (!isInstalled) {
+                document.getElementById('install-btn').style.display = 'inline-block';
+                showStatus('📱 Quotify se puede instalar como app nativa', 'success');
+            }
+        });
+        
+        // Función para instalar PWA
+        async function installPWA() {
+            if (!deferredPrompt) {
+                showStatus('❌ Instalación no disponible en este navegador', 'error');
+                return;
+            }
+            
+            const installBtn = document.getElementById('install-btn');
+            installBtn.disabled = true;
+            installBtn.textContent = '⏳ Instalando...';
+            
+            try {
+                // Mostrar prompt de instalación
+                deferredPrompt.prompt();
+                
+                // Esperar respuesta del usuario
+                const { outcome } = await deferredPrompt.userChoice;
+                
+                if (outcome === 'accepted') {
+                    showStatus('✅ Quotify instalado correctamente', 'success');
+                    installBtn.style.display = 'none';
+                    
+                    // Redirigir a la app después de instalar
+                    setTimeout(() => {
+                        window.location.href = 'http://localhost:5173';
+                    }, 2000);
+                } else {
+                    showStatus('❌ Instalación cancelada', 'error');
+                    installBtn.disabled = false;
+                    installBtn.textContent = '📱 Instalar como App';
+                }
+            } catch (error) {
+                showStatus('❌ Error durante la instalación', 'error');
+                installBtn.disabled = false;
+                installBtn.textContent = '📱 Instalar como App';
+            }
+            
+            deferredPrompt = null;
+        }
+        
+        // Detectar cuando se instala
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA installed successfully');
+            showStatus('✅ ¡Quotify instalado! Búscalo en tus apps', 'success');
+            document.getElementById('install-btn').style.display = 'none';
+        });
+        
+        // Registrar Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('SW registered:', registration);
+                    
+                    // Verificar actualizaciones
+                    registration.addEventListener('updatefound', () => {
+                        const newWorker = registration.installing;
+                        newWorker.addEventListener('statechange', () => {
+                            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                showStatus('🔄 Nueva versión disponible. Recarga para actualizar.', 'success');
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.log('SW registration failed:', error);
+                });
+        }
+        
+        function showStatus(message, type = '') {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+        }
+        
+        // Verificar si el servidor local está corriendo
+        async function checkServerStatus() {
+            try {
+                const response = await fetch('http://localhost:5173', { method: 'HEAD' });
+                if (response.ok) {
+                    document.getElementById('open-btn').style.display = 'inline-block';
+                } else {
+                    throw new Error('Server not responding');
+                }
+            } catch (error) {
+                document.getElementById('open-btn').textContent = '⚠️ Iniciar Servidor Primero';
+                document.getElementById('open-btn').onclick = function(e) {
+                    e.preventDefault();
+                    showStatus('❗ Primero ejecuta "npm run dev" en la carpeta de Quotify', 'error');
+                };
+            }
+        }
+        
+        // Verificar servidor al cargar
+        checkServerStatus();
+    </script>
+</body>
+</html>
