@@ -52,7 +52,8 @@
     "react-window": "^1.8.11",
     "react-window-infinite-loader": "^1.0.10",
     "tailwind-merge": "^2.2.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",

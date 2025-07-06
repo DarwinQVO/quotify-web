@@ -51,8 +51,10 @@ class WebAPIImplementation implements WebAPI {
   }
 
   async transcribeAudio(data: { url: string; apiKey: string; geminiApiKey?: string; geminiPrompt?: string }) {
-    // For web version, we'll show a message about file upload requirement
-    throw new Error('For web version, please use file upload instead of URL. Use transcribeFile method.');
+    return this.fetchAPI('/api/transcribe-audio', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
   }
 
   async transcribeFile(data: { audioFile: string; apiKey: string; geminiApiKey?: string; geminiPrompt?: string }) {

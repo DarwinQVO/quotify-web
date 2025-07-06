@@ -179,7 +179,7 @@ function parseDuration(duration) {
   return hours * 3600 + minutes * 60 + seconds;
 }
 
-// Transcribe audio using direct YouTube URL (simplified for web)
+// Transcribe audio using YouTube URL via yt-dlp service
 app.post('/api/transcribe-audio', async (req, res) => {
   try {
     const { url, apiKey, geminiApiKey, geminiPrompt } = req.body;
@@ -188,15 +188,128 @@ app.post('/api/transcribe-audio', async (req, res) => {
       return res.status(400).json({ error: 'OpenAI API key is required' });
     }
 
-    // For web version, we'll use a different approach
-    // Option 1: Use a service that can extract audio from YouTube URLs
-    // Option 2: Ask user to upload audio file directly
-    // Option 3: Use browser APIs to capture audio
+    console.log('🎵 Processing YouTube URL:', url);
     
-    // For now, return a placeholder response that maintains the same interface
-    res.status(501).json({ 
-      error: 'Audio transcription requires file upload in web version. Please upload an audio file directly.' 
-    });
+    // Extract audio using YouTube URL through a service
+    // Option 1: Use a YouTube audio extraction API service
+    // Option 2: Use ytdl-core with server-side workarounds
+    
+    // Using ytdl-core approach (works on server)
+    const ytdl = require('ytdl-core');
+    
+    try {
+      // Get video info first
+      const info = await ytdl.getInfo(url);
+      console.log('📹 Video title:', info.videoDetails.title);
+      
+      // Create a temporary buffer to store audio
+      const chunks = [];
+      const audioStream = ytdl(url, {
+        quality: 'lowestaudio',
+        filter: 'audioonly'
+      });
+      
+      audioStream.on('data', (chunk) => chunks.push(chunk));
+      
+      const audioBuffer = await new Promise((resolve, reject) => {
+        audioStream.on('end', () => resolve(Buffer.concat(chunks)));
+        audioStream.on('error', reject);
+      });
+      
+      console.log('✅ Audio extracted, size:', audioBuffer.length);
+      
+      // Transcribe with OpenAI Whisper
+      const formData = new FormData();
+      formData.append('file', audioBuffer, {
+        filename: 'audio.webm',
+        contentType: 'audio/webm'
+      });
+      formData.append('model', 'whisper-1');
+      formData.append('response_format', 'verbose_json');
+      formData.append('timestamp_granularities[]', 'word');
+      
+      const response = await axios.post(
+        'https://api.openai.com/v1/audio/transcriptions',
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            ...formData.getHeaders()
+          },
+          maxBodyLength: Infinity,
+          maxContentLength: Infinity,
+          timeout: 600000 // 10 minutes for long videos
+        }
+      );
+
+      const result = response.data;
+      const words = result.words?.map(word => ({
+        text: word.word.trim(),
+        start: word.start,
+        end: word.end,
+        speaker: null
+      })) || [];
+
+      console.log('📝 Transcript completed, processing with Gemini...');
+
+      // Process with Gemini if configured
+      let finalWords = words;
+      let speakerInfo = {};
+      
+      if (geminiApiKey && geminiPrompt && result.text) {
+        try {
+          const genAI = new GoogleGenerativeAI(geminiApiKey);
+          const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' });
+          
+          const textForAnalysis = words.map((word, index) => `[${index}] ${word.text}`).join(' ');
+          const fullPrompt = `${geminiPrompt}\n\nTRANSCRIPT TO ANALYZE:\n${textForAnalysis}`;
+          
+          const geminiResult = await model.generateContent(fullPrompt);
+          const geminiText = geminiResult.response.text();
+          
+          const cleanedResponse = geminiText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+          const analysis = JSON.parse(cleanedResponse);
+          
+          if (analysis.segments && Array.isArray(analysis.segments)) {
+            for (const segment of analysis.segments) {
+              const startIndex = parseInt(segment.start_word_index);
+              const endIndex = parseInt(segment.end_word_index);
+              
+              if (!isNaN(startIndex) && !isNaN(endIndex) && startIndex >= 0 && endIndex < finalWords.length) {
+                for (let i = startIndex; i <= endIndex && i < finalWords.length; i++) {
+                  if (finalWords[i] && segment.speaker_id) {
+                    finalWords[i].speaker = segment.speaker_id;
+                  }
+                }
+              }
+            }
+          }
+          
+          const uniqueSpeakers = [...new Set(finalWords.map(w => w.speaker).filter(Boolean))];
+          uniqueSpeakers.forEach((speaker, index) => {
+            speakerInfo[`speaker_${index}`] = speaker;
+          });
+          
+        } catch (geminiError) {
+          console.error('Gemini processing error:', geminiError.message);
+        }
+      }
+
+      res.json({
+        words: finalWords,
+        full_text: result.text,
+        speakers: speakerInfo
+      });
+      
+    } catch (ytdlError) {
+      console.error('YouTube extraction error:', ytdlError.message);
+      
+      // Fallback to asking for file upload
+      return res.status(400).json({ 
+        error: 'Could not extract audio from YouTube URL. Please try uploading an audio file instead.',
+        details: ytdlError.message
+      });
+    }
 
   } catch (error) {
     console.error('Transcription error:', error.message);
