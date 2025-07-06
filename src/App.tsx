@@ -264,7 +264,7 @@ function App() {
     ));
   };
 
-  const handleAddSource = async (url: string) => {
+  const handleAddSource = async (url: string, audioFile?: ArrayBuffer) => {
     if (!apiKey) {
       toast({
         title: "API Key Required",
@@ -293,13 +293,43 @@ function App() {
           : s
       ));
 
-      // Transcribe audio (with Gemini integration)
-      const transcript = await api.transcribeAudio({ 
-        url, 
-        apiKey, 
-        geminiApiKey: geminiApiKey?.trim() || undefined, 
-        geminiPrompt: geminiPrompt?.trim() || undefined 
-      });
+      let transcript;
+      
+      // Try different transcription methods based on environment and availability
+      if (audioFile) {
+        // Use uploaded file
+        const audioBase64 = btoa(String.fromCharCode(...new Uint8Array(audioFile)));
+        transcript = await api.transcribeFile({ 
+          audioFile: audioBase64,
+          apiKey, 
+          geminiApiKey: geminiApiKey?.trim() || undefined, 
+          geminiPrompt: geminiPrompt?.trim() || undefined 
+        });
+      } else {
+        // Try URL-based transcription first
+        try {
+          transcript = await api.transcribeAudio({ 
+            url, 
+            apiKey, 
+            geminiApiKey: geminiApiKey?.trim() || undefined, 
+            geminiPrompt: geminiPrompt?.trim() || undefined 
+          });
+        } catch (urlError) {
+          // If URL method fails, ask for file upload
+          setSources(prev => prev.map(s => 
+            s.id === newSource.id 
+              ? { ...s, status: 'error', error: 'Please upload audio file manually' } 
+              : s
+          ));
+          
+          toast({
+            title: "Audio extraction failed",
+            description: "Please try uploading the audio file directly",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
       
       const cleanedTranscript = {
         ...transcript,

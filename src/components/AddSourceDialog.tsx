@@ -10,12 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, Upload } from 'lucide-react';
+import { getAPI, isElectronEnvironment } from '@/lib/webAPI';
 
 interface AddSourceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAddSource: (url: string) => void;
+  onAddSource: (url: string, audioFile?: ArrayBuffer) => void;
   apiKey: string;
   onApiKeyChange: (key: string) => void;
 }
@@ -29,32 +30,69 @@ export function AddSourceDialog({
 }: AddSourceDialogProps) {
   const [url, setUrl] = useState('');
   const [error, setError] = useState('');
+  const [audioFile, setAudioFile] = useState<ArrayBuffer | null>(null);
+  const [fileName, setFileName] = useState<string>('');
+  const [useFileUpload, setUseFileUpload] = useState(!isElectronEnvironment());
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
 
-    // Validate URL
-    try {
-      const urlObj = new URL(url);
-      if (!urlObj.hostname.includes('youtube.com') && !urlObj.hostname.includes('youtu.be')) {
-        setError('Please enter a valid YouTube URL');
+    if (useFileUpload) {
+      // Handle file upload
+      if (!audioFile) {
+        setError('Please select an audio file');
         return;
       }
-    } catch {
-      setError('Please enter a valid URL');
-      return;
-    }
+      if (!url.trim()) {
+        setError('Please enter the YouTube URL for metadata');
+        return;
+      }
+      if (!apiKey) {
+        setError('Please enter your OpenAI API key');
+        return;
+      }
+      
+      onAddSource(url, audioFile);
+    } else {
+      // Handle URL-based (Electron only)
+      try {
+        const urlObj = new URL(url);
+        if (!urlObj.hostname.includes('youtube.com') && !urlObj.hostname.includes('youtu.be')) {
+          setError('Please enter a valid YouTube URL');
+          return;
+        }
+      } catch {
+        setError('Please enter a valid URL');
+        return;
+      }
 
-    // Validate API key
-    if (!apiKey) {
-      setError('Please enter your OpenAI API key');
-      return;
-    }
+      if (!apiKey) {
+        setError('Please enter your OpenAI API key');
+        return;
+      }
 
-    onAddSource(url);
+      onAddSource(url);
+    }
+    
     setUrl('');
+    setAudioFile(null);
+    setFileName('');
     onOpenChange(false);
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setFileName(file.name);
+      const reader = new FileReader();
+      reader.onload = () => {
+        if (reader.result instanceof ArrayBuffer) {
+          setAudioFile(reader.result);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
   };
 
   return (
@@ -110,6 +148,31 @@ export function AddSourceDialog({
                 </div>
               </div>
             )}
+
+            {/* Web version: Show file upload option */}
+            {!isElectronEnvironment() && (
+              <>
+                <div className="border-t pt-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <Upload className="h-4 w-4" />
+                    <Label>Upload Audio File</Label>
+                  </div>
+                  <div className="text-xs text-muted-foreground mb-3">
+                    For web version: Download audio from YouTube first, then upload here
+                  </div>
+                  <Input
+                    type="file"
+                    accept="audio/*,.mp3,.wav,.m4a,.ogg,.flac"
+                    onChange={handleFileUpload}
+                  />
+                  {fileName && (
+                    <div className="text-sm text-green-600 mt-2">
+                      ✓ {fileName} selected
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
             
             {error && (
               <div className="flex items-center gap-2 text-sm text-destructive">
@@ -123,7 +186,9 @@ export function AddSourceDialog({
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
-            <Button type="submit">Add Source</Button>
+            <Button type="submit">
+              {!isElectronEnvironment() ? 'Upload & Transcribe' : 'Add Source'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
